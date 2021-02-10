@@ -599,6 +599,124 @@ test('.add() - throttled, carryoverConcurrencyCount false', async t => {
 	t.deepEqual(result, values);
 });
 
+test('.add() - throttled, carryoverConcurrencyCount false large', async t => {
+	const result: number[] = [];
+
+	const testIntervals = 5;
+	const intervalCap = 10000;
+	const interval = 1000;
+
+	const queue = new PQueue({
+		intervalCap,
+		carryoverConcurrencyCount: false,
+		interval,
+		autoStart: false
+	});
+
+	const values = [...new Array(testIntervals * intervalCap).keys()];
+
+	values.forEach(async value => queue.add(async () => {
+		await delay(500);
+		result.push(value);
+	}));
+
+	queue.start();
+
+	t.is(queue.pending, intervalCap);
+	t.is(queue.size, (testIntervals - 1) * intervalCap);
+	t.deepEqual(result, []);
+
+	(async () => {
+		await delay(1.1 * interval);
+		t.is(queue.pending, intervalCap);
+		t.is(queue.size, (testIntervals - 2) * Number(intervalCap));
+		t.deepEqual(result, [...new Array(1 * Number(intervalCap)).keys()]);
+	})();
+
+	(async () => {
+		await delay(2.1 * interval);
+		t.is(queue.pending, intervalCap);
+		t.is(queue.size, (testIntervals - 3) * intervalCap);
+		t.deepEqual(result, [...new Array(2 * Number(intervalCap)).keys()]);
+	})();
+
+	(async () => {
+		await delay(3.1 * interval);
+		t.is(queue.pending, intervalCap);
+		t.is(queue.size, (testIntervals - 4) * intervalCap);
+		t.deepEqual(result, [...new Array(3 * Number(intervalCap)).keys()]);
+	})();
+
+	(async () => {
+		await delay(4.1 * interval);
+		t.is(queue.pending, intervalCap);
+		t.is(queue.size, (testIntervals - 5) * intervalCap);
+		t.deepEqual(result, [...new Array(4 * Number(intervalCap)).keys()]);
+	})();
+
+	await delay(5.1 * interval);
+	t.deepEqual(result, values);
+});
+
+test('.add() - throttled, carryoverConcurrencyCount false, small interval', async t => {
+	const result: number[] = [];
+
+	const testIntervals = 5;
+	const intervalCap = 10;
+	const interval = 50;
+
+	const queue = new PQueue({
+		intervalCap,
+		carryoverConcurrencyCount: false,
+		interval,
+		autoStart: false
+	});
+
+	const values = [...new Array(testIntervals * intervalCap).keys()];
+
+	values.forEach(async value => queue.add(async () => {
+		await delay(500);
+		result.push(value);
+	}));
+
+	queue.start();
+
+	t.is(queue.pending, intervalCap);
+	t.is(queue.size, (testIntervals - 1) * intervalCap);
+	t.deepEqual(result, []);
+
+	(async () => {
+		await delay(1.1 * interval);
+		t.is(queue.pending, intervalCap);
+		t.is(queue.size, (testIntervals - 2) * Number(intervalCap));
+		t.deepEqual(result, [...new Array(1 * Number(intervalCap)).keys()]);
+	})();
+
+	(async () => {
+		await delay(2.1 * interval);
+		t.is(queue.pending, intervalCap);
+		t.is(queue.size, (testIntervals - 3) * intervalCap);
+		t.deepEqual(result, [...new Array(2 * Number(intervalCap)).keys()]);
+	})();
+
+	(async () => {
+		await delay(3.1 * interval);
+		t.is(queue.pending, intervalCap);
+		t.is(queue.size, (testIntervals - 4) * intervalCap);
+		t.deepEqual(result, [...new Array(3 * Number(intervalCap)).keys()]);
+	})();
+
+	(async () => {
+		await delay(4.1 * interval);
+		t.is(queue.pending, intervalCap);
+		t.is(queue.size, (testIntervals - 5) * intervalCap);
+		t.deepEqual(result, [...new Array(4 * Number(intervalCap)).keys()]);
+	})();
+
+	await delay(5.1 * interval);
+	t.deepEqual(result, values);
+});
+
 test('.add() - throttled, carryoverConcurrencyCount true', async t => {
 	const result: number[] = [];
 
